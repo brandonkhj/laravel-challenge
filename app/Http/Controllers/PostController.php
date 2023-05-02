@@ -2,31 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PostResource;
 use App\Models\Like;
 use App\Models\Post;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function list()
+    public function list(Request $request)
     {
-        $posts = Post::get();
-
-        $data = collect();
-        foreach ($posts as $post) {
-            $data->add([
-                'id' => $post->id,
-                'title' => $post->title,
-                'description' => $post->description,
-                'tags' => $post->tags,
-                'like_counts' => $post->likes->count(),
-                'created_at' => $post->created_at,
-            ]);
-        }
-
-        return response()->json([
-            'data' => $data,
+        $request->validate([
+            'perPage' => 'int|min:1'
         ]);
+
+        $posts = Post::query()->with('likes','tags');
+
+        return PostResource::collection(
+            $posts->simplePaginate($request->input('perPage', 10))
+        );
     }
 
     public function toggleReaction(Request $request)
