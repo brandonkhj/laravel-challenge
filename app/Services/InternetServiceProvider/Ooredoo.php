@@ -2,7 +2,7 @@
 
 namespace App\Services\InternetServiceProvider;
 
-class Ooredoo extends Mpt
+class Ooredoo implements InternetInterface
 {
     protected $operator = 'ooredoo';
 
