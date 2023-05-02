@@ -8,25 +8,30 @@ use Illuminate\Http\Request;
 
 class InternetServiceProviderController extends Controller
 {
+    private $mpt;
+    private $ooredoo;
+
+    public function __construct(Mpt $mpt, Ooredoo $ooredoo)
+    {
+        $this->mpt = $mpt;
+        $this->ooredoo = $ooredoo;
+    }
+
     public function getMptInvoiceAmount(Request $request)
     {
-        $mpt = new Mpt();
-        $mpt->setMonth($request->get('month') ?: 1);
-        $amount = $mpt->calculateTotalAmount();
+        $this->mpt->setMonth($request->get('month') ?: 1);
 
         return response()->json([
-            'data' => $amount,
+            'data' => $this->mpt->calculateTotalAmount(),
         ]);
     }
 
     public function getOoredooInvoiceAmount(Request $request)
     {
-        $ooredoo = new Ooredoo();
-        $ooredoo->setMonth($request->get('month') ?: 1);
-        $amount = $ooredoo->calculateTotalAmount();
+        $this->ooredoo->setMonth($request->get('month') ?: 1);
 
         return response()->json([
-            'data' => $amount,
+            'data' => $this->ooredoo->calculateTotalAmount(),
         ]);
     }
 }
