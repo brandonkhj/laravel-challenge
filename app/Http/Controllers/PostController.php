@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PostReactionRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Like;
 use App\Models\Post;
@@ -12,24 +13,20 @@ class PostController extends Controller
     public function list(Request $request)
     {
         $request->validate([
-            'perPage' => 'int|min:1'
+            'perPage' => 'int|min:1',
         ]);
 
-        $posts = Post::query()->with('likes','tags');
+        $posts = Post::query()->with('likes', 'tags');
 
         return PostResource::collection(
             $posts->simplePaginate($request->input('perPage', 10))
         );
     }
 
-    public function toggleReaction(Request $request)
+    public function toggleReaction(PostReactionRequest $request)
     {
-        $request->validate([
-            'post_id' => 'required|int|exists:posts,id',
-            'like' => 'required|boolean',
-        ]);
-
         $post = Post::find($request->post_id);
+
         if (! $post) {
             return response()->json([
                 'status' => 404,
@@ -37,20 +34,25 @@ class PostController extends Controller
             ]);
         }
 
-        if ($post->user_id == auth()->id()) {
+        $like = Like::query()
+            ->where('post_id', $request->post_id)
+            ->where('user_id', auth()->id());
+
+        if ($like->exists() && $request->like === true) {
             return response()->json([
-                'status' => 500,
-                'message' => 'You cannot like your post',
-            ]);
+                'status' => 400,
+                'message' => 'You already liked this post',
+            ], 400);
         }
 
-        $like = Like::where('post_id', $request->post_id)->where('user_id', auth()->id())->first();
-        if ($like && $like->post_id == $request->post_id && $request->like) {
+        if (! $like->exists() && $request->like === false) {
             return response()->json([
-                'status' => 500,
-                'message' => 'You already liked this post',
-            ]);
-        } elseif ($like && $like->post_id == $request->post_id && ! $request->like) {
+                'status' => 400,
+                'message' => 'You already unlike this post',
+            ], 400);
+        }
+
+        if ($request->like === false) {
             $like->delete();
 
             return response()->json([

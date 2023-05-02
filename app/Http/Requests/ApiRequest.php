@@ -21,4 +21,12 @@ class ApiRequest extends FormRequest
             'status' => 422,
         ], 422));
     }
+
+    protected function failedAuthorization()
+    {
+        throw new HttpResponseException(response()->json([
+            'status' => 403,
+            'message' => 'Unauthorised',
+        ], 403));
+    }
 }
