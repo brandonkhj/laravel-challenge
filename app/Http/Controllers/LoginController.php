@@ -16,9 +16,9 @@ class LoginController extends Controller
 
         if (! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'status' => 401,
+                'status' => 403,
                 'message' => 'Invalid credentials',
-            ], 401);
+            ], 403);
         }
 
         return response()->json([
